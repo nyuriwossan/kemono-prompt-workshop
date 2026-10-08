@@ -315,6 +315,9 @@ footer{text-align:center;font-size:11.5px;color:var(--faint);padding:0 16px 24px
      - 模様      … PATTERNS
      - 体型      … BODY（x:"h" 背丈 / x:"b" 体つき）
      - 尾の形    … TAILS（only で使える分類を限定）
+   - 種族の t    … 種族タブ（TABS）。省略すると g（分類）のタブに入ります
+   - 種族の weak … 学習が薄そうな種族の目印。哺乳類は補助タグ（animal ears / animal tail）を足せます
+   - 種族の o:{noTail:true} … 尾のない動物（尾の項目と出力を省きます）
    ■ テンプレートの記号
      {s} 種族の英名 / {c} 色 / {cov} 体表（fur, feathers, scales…）
    ===================================================================== */
@@ -368,44 +371,92 @@ const GROUPS = {
 /* 蹄のある動物用の上書き */
 const HOOF = { hands4: "hoofed feet", limbs5: "hooves", limbJa: "蹄のある足", claws: null, teeth: null };
 
+/* 種族タブ（画面上の絞り込み。種族の t で指定。省略時は分類 g と同じ） */
+const TABS = [
+  { id: "carn", ja: "肉食・雑食", icon: "🐺" },
+  { id: "herb", ja: "草食・大型", icon: "🦌" },
+  { id: "small", ja: "小動物", icon: "🐹" },
+  { id: "prim", ja: "霊長・有袋", icon: "🐒" },
+  { id: "bird", ja: "鳥類", icon: "🪶" },
+  { id: "reptile", ja: "爬虫・竜", icon: "🐉" },
+  { id: "aquatic", ja: "水棲", icon: "🌊" }
+];
+const tabOf = s => s.t || s.g;
+
 /* 種族
    ears / tails / pats … おすすめ候補（★表示・ランダム時に優先）
    feat … 種族固有パーツ（min = そのレベル以上で出力）
    o    … 分類の共通設定を上書き */
 const SPECIES = [
   // ---- 哺乳類 ----
-  { id: "wolf", ja: "狼", en: "wolf", em: "🐺", g: "mammal", ears: ["pointed"], tails: ["long", "fluffy"], pats: ["belly", "twotone"] },
-  { id: "fox", ja: "狐", en: "fox", em: "🦊", g: "mammal", ears: ["pointed", "big"], tails: ["fluffy", "thick", "multi"], pats: ["belly", "twotone"] },
-  { id: "dog", ja: "犬", en: "dog", em: "🐶", g: "mammal", ears: ["floppy", "pointed"], tails: ["long"], pats: ["twotone", "solid"] },
-  { id: "cat", ja: "猫", en: "cat", em: "🐱", g: "mammal", ears: ["pointed"], tails: ["long", "thin"], pats: ["solid", "stripes"] },
-  { id: "tiger", ja: "虎", en: "tiger", em: "🐯", g: "mammal", ears: ["round"], tails: ["long", "thick"], pats: ["stripes"] },
-  { id: "leopard", ja: "豹", en: "leopard", em: "🐆", g: "mammal", ears: ["round", "small"], tails: ["long"], pats: ["spots"] },
-  { id: "panther", ja: "黒豹", en: "black panther", em: "🐈‍⬛", g: "mammal", ears: ["round", "small"], tails: ["long", "thin"], pats: ["solid"] },
-  { id: "snowleopard", ja: "雪豹", en: "snow leopard", em: "❄️", g: "mammal", ears: ["round", "small"], tails: ["long", "thick", "fluffy"], pats: ["spots"] },
-  { id: "lion", ja: "獅子", en: "lion", em: "🦁", g: "mammal", ears: ["round", "small"], tails: ["long", "tufted"], pats: ["solid"],
+  { id: "wolf", t: "carn", ja: "狼", en: "wolf", em: "🐺", g: "mammal", ears: ["pointed"], tails: ["long", "fluffy"], pats: ["belly", "twotone"] },
+  { id: "fox", t: "carn", ja: "狐", en: "fox", em: "🦊", g: "mammal", ears: ["pointed", "big"], tails: ["fluffy", "thick", "multi"], pats: ["belly", "twotone"] },
+  { id: "dog", t: "carn", ja: "犬", en: "dog", em: "🐶", g: "mammal", ears: ["floppy", "pointed"], tails: ["long"], pats: ["twotone", "solid"] },
+  { id: "cat", t: "carn", ja: "猫", en: "cat", em: "🐱", g: "mammal", ears: ["pointed"], tails: ["long", "thin"], pats: ["solid", "stripes"] },
+  { id: "tiger", t: "carn", ja: "虎", en: "tiger", em: "🐯", g: "mammal", ears: ["round"], tails: ["long", "thick"], pats: ["stripes"] },
+  { id: "leopard", t: "carn", ja: "豹", en: "leopard", em: "🐆", g: "mammal", ears: ["round", "small"], tails: ["long"], pats: ["spots"] },
+  { id: "panther", t: "carn", ja: "黒豹", en: "black panther", em: "🐈‍⬛", g: "mammal", ears: ["round", "small"], tails: ["long", "thin"], pats: ["solid"] },
+  { id: "snowleopard", t: "carn", ja: "雪豹", en: "snow leopard", em: "❄️", g: "mammal", ears: ["round", "small"], tails: ["long", "thick", "fluffy"], pats: ["spots"] },
+  { id: "lion", t: "carn", ja: "獅子", en: "lion", em: "🦁", g: "mammal", ears: ["round", "small"], tails: ["long", "tufted"], pats: ["solid"],
     feat: [{ en: "lion mane", ja: "たてがみ", min: 4 }] },
-  { id: "bear", ja: "熊", en: "bear", em: "🐻", g: "mammal", ears: ["round", "small"], tails: ["short"], pats: ["solid"], o: { legs: null } },
-  { id: "panda", ja: "パンダ", en: "panda", em: "🐼", g: "mammal", ears: ["round", "small"], tails: ["short"], pats: ["twotone"], o: { legs: null } },
-  { id: "tanuki", ja: "狸", en: "tanuki", em: "🦝", g: "mammal", ears: ["round", "small"], tails: ["fluffy", "thick"], pats: ["twotone"] },
-  { id: "hyena", ja: "ハイエナ", en: "hyena", em: "🐾", g: "mammal", ears: ["round", "big"], tails: ["short", "tufted"], pats: ["spots"] },
-  { id: "rabbit", ja: "兎", en: "rabbit", em: "🐰", g: "mammal", ears: ["long", "floppy"], tails: ["short", "fluffy"], pats: ["solid"] },
-  { id: "deer", ja: "鹿", en: "deer", em: "🦌", g: "mammal", ears: ["pointed"], tails: ["short"], pats: ["spots"],
+  { id: "bear", t: "carn", ja: "熊", en: "bear", em: "🐻", g: "mammal", ears: ["round", "small"], tails: ["short"], pats: ["solid"], o: { legs: null } },
+  { id: "panda", t: "carn", ja: "パンダ", en: "panda", em: "🐼", g: "mammal", ears: ["round", "small"], tails: ["short"], pats: ["twotone"], o: { legs: null } },
+  { id: "tanuki", t: "carn", ja: "狸", en: "tanuki", em: "🦝", g: "mammal", ears: ["round", "small"], tails: ["fluffy", "thick"], pats: ["twotone"] },
+  { id: "hyena", t: "carn", ja: "ハイエナ", en: "hyena", em: "🐾", g: "mammal", ears: ["round", "big"], tails: ["short", "tufted"], pats: ["spots"] },
+  { id: "rabbit", t: "small", ja: "兎", en: "rabbit", em: "🐰", g: "mammal", ears: ["long", "floppy"], tails: ["short", "fluffy"], pats: ["solid"] },
+  { id: "deer", t: "herb", ja: "鹿", en: "deer", em: "🦌", g: "mammal", ears: ["pointed"], tails: ["short"], pats: ["spots"],
     feat: [{ en: "deer antlers", ja: "鹿の角", min: 1 }], o: HOOF },
-  { id: "sheep", ja: "羊", en: "sheep", em: "🐑", g: "mammal", ears: ["floppy", "small"], tails: ["short", "fluffy"], pats: ["solid"],
+  { id: "sheep", t: "herb", ja: "羊", en: "sheep", em: "🐑", g: "mammal", ears: ["floppy", "small"], tails: ["short", "fluffy"], pats: ["solid"],
     feat: [{ en: "curled ram horns", ja: "巻き角", min: 1 }], o: Object.assign({ cover: "wool", coverJa: "羊毛" }, HOOF) },
-  { id: "goat", ja: "山羊", en: "goat", em: "🐐", g: "mammal", ears: ["floppy"], tails: ["short"], pats: ["solid"],
+  { id: "goat", t: "herb", ja: "山羊", en: "goat", em: "🐐", g: "mammal", ears: ["floppy"], tails: ["short"], pats: ["solid"],
     feat: [{ en: "goat horns", ja: "山羊の角", min: 1 }], o: HOOF },
-  { id: "cow", ja: "牛", en: "cow", em: "🐮", g: "mammal", ears: ["floppy"], tails: ["long", "tufted"], pats: ["spots"],
+  { id: "cow", t: "herb", ja: "牛", en: "cow", em: "🐮", g: "mammal", ears: ["floppy"], tails: ["long", "tufted"], pats: ["spots"],
     feat: [{ en: "cow horns", ja: "牛の角", min: 1 }], o: HOOF },
-  { id: "horse", ja: "馬", en: "horse", em: "🐴", g: "mammal", ears: ["pointed"], tails: ["long"], pats: ["solid"],
+  { id: "horse", t: "herb", ja: "馬", en: "horse", em: "🐴", g: "mammal", ears: ["pointed"], tails: ["long"], pats: ["solid"],
     feat: [{ en: "flowing horse mane", ja: "たてがみ", min: 4 }], o: HOOF },
-  { id: "boar", ja: "猪", en: "boar", em: "🐗", g: "mammal", ears: ["pointed", "small"], tails: ["short", "thin"], pats: ["solid"],
+  { id: "boar", t: "herb", ja: "猪", en: "boar", em: "🐗", g: "mammal", ears: ["pointed", "small"], tails: ["short", "thin"], pats: ["solid"],
     feat: [{ en: "small tusks", ja: "小さな牙", min: 2 }], o: HOOF },
-  { id: "mouse", ja: "鼠", en: "mouse", em: "🐭", g: "mammal", ears: ["round", "big"], tails: ["long", "thin"], pats: ["solid"] },
-  { id: "squirrel", ja: "栗鼠", en: "squirrel", em: "🐿️", g: "mammal", ears: ["pointed"], tails: ["fluffy", "thick"], pats: ["belly"] },
-  { id: "otter", ja: "カワウソ", en: "otter", em: "🦦", g: "mammal", ears: ["round", "small"], tails: ["long", "thick"], pats: ["belly"] },
-  { id: "bat", ja: "蝙蝠", en: "bat", em: "🦇", g: "mammal", ears: ["pointed", "big"], tails: ["short", "thin"], pats: ["solid"],
+  { id: "mouse", t: "small", ja: "鼠", en: "mouse", em: "🐭", g: "mammal", ears: ["round", "big"], tails: ["long", "thin"], pats: ["solid"] },
+  { id: "squirrel", t: "small", ja: "栗鼠", en: "squirrel", em: "🐿️", g: "mammal", ears: ["pointed"], tails: ["fluffy", "thick"], pats: ["belly"] },
+  { id: "otter", t: "carn", ja: "カワウソ", en: "otter", em: "🦦", g: "mammal", ears: ["round", "small"], tails: ["long", "thick"], pats: ["belly"] },
+  { id: "bat", t: "small", ja: "蝙蝠", en: "bat", em: "🦇", g: "mammal", ears: ["pointed", "big"], tails: ["short", "thin"], pats: ["solid"],
     feat: [{ en: "bat wings", ja: "コウモリの翼", min: 1 }] },
+  // ---- 追加：肉食・雑食 ----
+  { id: "raccoon", t: "carn", ja: "アライグマ", en: "raccoon", em: "🦝", g: "mammal", ears: ["round"], tails: ["thick", "fluffy"], pats: ["stripes", "twotone"] },
+  { id: "badger", t: "carn", ja: "アナグマ", en: "badger", em: "🦡", g: "mammal", ears: ["round", "small"], tails: ["short"], pats: ["stripes", "twotone"], weak: true },
+  { id: "skunk", t: "carn", ja: "スカンク", en: "skunk", em: "🦨", g: "mammal", ears: ["round", "small"], tails: ["thick", "fluffy"], pats: ["stripes", "twotone"], weak: true },
+  { id: "ferret", t: "carn", ja: "フェレット", en: "ferret", em: "🐾", g: "mammal", ears: ["round", "small"], tails: ["long", "thin"], pats: ["twotone", "belly"], weak: true },
+  // ---- 追加：草食・大型 ----
+  { id: "zebra", t: "herb", ja: "シマウマ", en: "zebra", em: "🦓", g: "mammal", ears: ["pointed"], tails: ["long", "tufted"], pats: ["stripes"], weak: true, o: HOOF },
+  { id: "giraffe", t: "herb", ja: "キリン", en: "giraffe", em: "🦒", g: "mammal", ears: ["pointed", "small"], tails: ["long", "tufted"], pats: ["spots"], weak: true,
+    feat: [{ en: "ossicones", ja: "短い角（オシコーン）", min: 1 }], o: HOOF },
+  { id: "camel", t: "herb", ja: "ラクダ", en: "camel", em: "🐫", g: "mammal", ears: ["round", "small"], tails: ["short", "tufted"], pats: ["solid"], weak: true,
+    feat: [{ en: "camel hump", ja: "背中のこぶ", min: 4 }], o: HOOF },
+  { id: "alpaca", t: "herb", ja: "アルパカ", en: "alpaca", em: "🦙", g: "mammal", ears: ["pointed"], tails: ["short", "fluffy"], pats: ["solid"], weak: true,
+    o: Object.assign({ cover: "wool", coverJa: "羊毛" }, HOOF) },
+  { id: "elephant", t: "herb", ja: "ゾウ", en: "elephant", em: "🐘", g: "mammal", ears: ["big"], tails: ["thin", "tufted"], pats: ["solid"], weak: true,
+    feat: [{ en: "small tusks", ja: "小さな牙", min: 3 }],
+    o: { cover: "skin", coverJa: "皮膚", partial: "patches of {c}{cov} on arms", lv3cover: "tough {cov}", claws: null, teeth: null,
+         mouth: "trunk", shortMouth: "trunk", nose: null, mouthJa: "長い鼻",
+         hands4: "large padded feet", limbs5: "large padded feet", limbJa: "大きな足" } },
+  { id: "rhino", t: "herb", ja: "サイ", en: "rhino", em: "🦏", g: "mammal", ears: ["small", "round"], tails: ["thin", "tufted"], pats: ["solid"], weak: true,
+    feat: [{ en: "rhino horn", ja: "サイの角", min: 1 }],
+    o: Object.assign({ cover: "skin", coverJa: "皮膚", partial: "patches of {c}{cov} on arms", lv3cover: "tough {cov}" }, HOOF) },
+  // ---- 追加：小動物 ----
+  { id: "hedgehog", t: "small", ja: "ハリネズミ", en: "hedgehog", em: "🦔", g: "mammal", ears: ["round", "small"], tails: ["short"], pats: ["belly"], weak: true,
+    feat: [{ en: "spiky quills", ja: "背中の針", min: 2 }] },
+  { id: "beaver", t: "small", ja: "ビーバー", en: "beaver", em: "🦫", g: "mammal", ears: ["round", "small"], tails: ["flat"], pats: ["solid"], weak: true,
+    o: { teeth: "buck teeth" } },
+  { id: "capybara", t: "small", ja: "カピバラ", en: "capybara", em: "🐹", g: "mammal", ears: ["round", "small"], tails: [], pats: ["solid"], weak: true,
+    o: { noTail: true, teeth: "buck teeth" } },
+  // ---- 追加：霊長・有袋 ----
+  { id: "monkey", t: "prim", ja: "サル", en: "monkey", em: "🐵", g: "mammal", ears: ["round"], tails: ["long", "thin"], pats: ["twotone", "solid"] },
+  { id: "gorilla", t: "prim", ja: "ゴリラ", en: "gorilla", em: "🦍", g: "mammal", ears: ["round", "small"], tails: [], pats: ["solid"], weak: true,
+    o: { noTail: true } },
+  { id: "kangaroo", t: "prim", ja: "カンガルー", en: "kangaroo", em: "🦘", g: "mammal", ears: ["long", "pointed"], tails: ["long", "thick"], pats: ["belly", "solid"], weak: true,
+    o: { teeth: null } },
+  { id: "koala", t: "prim", ja: "コアラ", en: "koala", em: "🐨", g: "mammal", ears: ["round", "big"], tails: [], pats: ["solid"], weak: true,
+    o: { noTail: true, teeth: null } },
   // ---- 鳥類（ears は頭の飾り羽のおすすめ） ----
   { id: "bird", ja: "小鳥", en: "bird", em: "🐦", g: "bird", ears: ["crest"], tails: ["short"], pats: ["belly"] },
   { id: "hawk", ja: "鷹", en: "hawk", em: "🦅", g: "bird", ears: ["none"], tails: ["long", "fan"], pats: ["belly"] },
@@ -415,6 +466,11 @@ const SPECIES = [
   { id: "swan", ja: "白鳥", en: "swan", em: "🦢", g: "bird", ears: ["none"], tails: ["short"], pats: ["solid"] },
   { id: "parrot", ja: "オウム", en: "parrot", em: "🦜", g: "bird", ears: ["crest"], tails: ["long"], pats: ["gradient"] },
   { id: "dove", ja: "鳩", en: "dove", em: "🕊️", g: "bird", ears: ["none"], tails: ["fan"], pats: ["solid"] },
+  // ---- 追加：鳥類 ----
+  { id: "penguin", ja: "ペンギン", en: "penguin", em: "🐧", g: "bird", ears: ["none"], tails: ["short"], pats: ["belly", "twotone"], weak: true,
+    feat: [{ en: "penguin flippers", ja: "フリッパー（短い翼）", min: 1 }], o: { wings: false } },
+  { id: "flamingo", ja: "フラミンゴ", en: "flamingo", em: "🦩", g: "bird", ears: ["none"], tails: ["short", "fan"], pats: ["gradient", "solid"], weak: true },
+  { id: "crane", ja: "鶴", en: "red-crowned crane", em: "🦢", g: "bird", ears: ["none"], tails: ["short"], pats: ["twotone"], weak: true },
   // ---- 爬虫類・竜（ears は頭部パーツのおすすめ） ----
   { id: "snake", ja: "蛇", en: "snake", em: "🐍", g: "reptile", ears: ["none"], tails: ["long", "thin"], pats: ["stripes", "spots"], o: { legs: null } },
   { id: "lizard", ja: "トカゲ", en: "lizard", em: "🦎", g: "reptile", ears: ["spines"], tails: ["long"], pats: ["spots"] },
@@ -429,13 +485,23 @@ const SPECIES = [
   { id: "eastdragon", ja: "東洋龍", en: "eastern dragon", em: "🐲", g: "reptile", ears: ["auto"], tails: ["long", "finned"], pats: ["gradient"],
     feat: [{ en: "antler-like dragon horns", ja: "鹿のような角", min: 1 }],
     o: { kin: "{s}kin", jaKinFull: "龍人" } },
+  // ---- 追加：爬虫類 ----
+  { id: "chameleon", ja: "カメレオン", en: "chameleon", em: "🦎", g: "reptile", ears: ["spines"], tails: ["long", "thin"], pats: ["mottled", "gradient"], weak: true },
+  { id: "gecko", ja: "ヤモリ", en: "gecko", em: "🦎", g: "reptile", ears: ["none"], tails: ["long", "thin"], pats: ["spots", "mottled"], weak: true },
+  { id: "iguana", ja: "イグアナ", en: "iguana", em: "🦎", g: "reptile", ears: ["spines"], tails: ["long", "thick"], pats: ["solid", "spots"], weak: true,
+    feat: [{ en: "dorsal spines", ja: "背中のトゲ", min: 3 }] },
   // ---- 水棲 ----
   { id: "shark", ja: "サメ", en: "shark", em: "🦈", g: "aquatic", ears: ["finears"], tails: ["thick"], pats: ["belly"],
     feat: [{ en: "dorsal fin", ja: "背びれ", min: 3 }], o: { cover: "shark skin", coverJa: "鮫肌" } },
   { id: "orca", ja: "シャチ", en: "orca", em: "🐋", g: "aquatic", ears: ["finears"], tails: ["thick", "finned"], pats: ["twotone"],
     feat: [{ en: "dorsal fin", ja: "背びれ", min: 3 }], o: { cover: "smooth skin", coverJa: "なめらかな肌" } },
   { id: "dolphin", ja: "イルカ", en: "dolphin", em: "🐬", g: "aquatic", ears: ["none"], tails: ["finned"], pats: ["belly"],
-    feat: [{ en: "dorsal fin", ja: "背びれ", min: 3 }], o: { cover: "smooth skin", coverJa: "なめらかな肌" } }
+    feat: [{ en: "dorsal fin", ja: "背びれ", min: 3 }], o: { cover: "smooth skin", coverJa: "なめらかな肌" } },
+  // ---- 追加：海獣（体は哺乳類の設定、タブは水棲） ----
+  { id: "seal", t: "aquatic", ja: "アザラシ", en: "seal", em: "🦭", g: "mammal", ears: ["small"], tails: ["short"], pats: ["spots", "belly"], weak: true,
+    o: { legs: null, claws: null, teeth: null, hands4: "flipper-like hands and feet", limbs5: "flippers", limbJa: "ひれ状の手足" } },
+  { id: "walrus", t: "aquatic", ja: "セイウチ", en: "walrus", em: "🦭", g: "mammal", ears: ["small"], tails: ["short"], pats: ["solid"], weak: true,
+    feat: [{ en: "long tusks", ja: "長い牙", min: 2 }], o: { legs: null, claws: null, teeth: null, hands4: "flipper-like hands and feet", limbs5: "flippers", limbJa: "ひれ状の手足" } }
 ];
 
 /* 獣化レベル（説明文の {cov}{mouth}{limb} は種族に合わせて置き換わります） */
@@ -496,6 +562,7 @@ const TAILS = [
   { id: "thin", ja: "細い", ren: "細く", rt: "細い", en: "thin", x: "wid", only: ["mammal", "reptile", "aquatic"] },
   { id: "fluffy", ja: "ふさふさ", ren: "ふさふさで", rt: "ふさふさした", en: "fluffy", only: ["mammal"] },
   { id: "tufted", ja: "先が房状", ren: "先が房状で", rt: "先が房状の", en: "tufted", only: ["mammal"] },
+  { id: "flat", ja: "平たい", ren: "平たく", rt: "平たい", en: "flat", only: ["mammal"] },
   { id: "fan", ja: "扇状", ren: "扇状に広がり", rt: "扇状に広がる", en: "fan-shaped", only: ["bird"] },
   { id: "ornate", ja: "飾り羽", ren: "華やかな飾りがあり", rt: "華やかな飾りのある", en: "ornate", only: ["bird"] },
   { id: "spiked", ja: "トゲ付き", ren: "トゲがあり", rt: "トゲのある", en: "spiked", only: ["reptile"] },
@@ -571,7 +638,10 @@ const OUTFITS = [
   { id: "casual", ja: "現代カジュアル", en: "casual modern clothes", jaT: "現代的なカジュアル服" },
   { id: "street", ja: "ストリート", en: "streetwear", jaT: "ストリート系の服" },
   { id: "suit", ja: "スーツ", en: "tailored suit", jaT: "スーツ" },
-  { id: "uniform", ja: "制服", en: "uniform", jaT: "制服" },
+  { id: "uniform", ja: "ユニフォーム", en: "uniform", jaT: "ユニフォーム" },
+  { id: "school", ja: "学生服", en: "school uniform", jaT: "学生服" },
+  { id: "maid", ja: "メイド服", en: "maid outfit", jaT: "メイド服" },
+  { id: "butler", ja: "執事服", en: "butler outfit", jaT: "執事服" },
   { id: "military", ja: "軍装", en: "military uniform", jaT: "軍服" },
   { id: "adventurer", ja: "冒険者", en: "fantasy adventurer outfit", jaT: "冒険者風の衣装" },
   { id: "fantasy", ja: "ファンタジー", en: "fantasy clothing", jaT: "ファンタジー風の衣装" },
@@ -581,7 +651,9 @@ const OUTFITS = [
   { id: "royal", ja: "王族・貴族", en: "royal noble attire", jaT: "王侯貴族の装い" },
   { id: "japanese", ja: "和風", en: "japanese clothes", jaT: "和装" },
   { id: "chinese", ja: "中華風", en: "chinese clothes", jaT: "中華風の衣装" },
-  { id: "scifi", ja: "SF", en: "sci-fi outfit", jaT: "SF風の衣装" }
+  { id: "scifi", ja: "SF", en: "sci-fi outfit", jaT: "SF風の衣装" },
+  { id: "bikini_f", ja: "ビキニ（女性）", en: "bikini", jaT: "ビキニ" },
+  { id: "bikini_m", ja: "ビキニ（男性）", en: "male swimwear, swim briefs", jaT: "男性用のビキニパンツ" }
 ];
 
 /* 雰囲気（na=日本語文で「〜な雰囲気」に入る形） */
@@ -630,7 +702,7 @@ const EXPRESSIONS = [
 /* ======================= 生成ロジック（DOM非依存） ======================= */
 
 const DEFAULT_STATE = {
-  species: "wolf", level: 3,
+  species: "wolf", level: 3, assist: true,
   head: [], tail: [], body: [],
   colors: [], pattern: "auto",
   outfit: "auto", vibes: [], expr: "auto"
@@ -658,6 +730,7 @@ function normalize(st) {
   if (!set.multi) st.head = st.head.slice(0, 1);
   const okT = tailsFor(sp.g).map(t => t.id);
   st.tail = st.tail.filter(id => okT.includes(id));
+  if (cfgOf(sp).noTail) st.tail = [];
   st.colors = st.colors.filter(id => byId(COLORS, id)).slice(0, 2);
   if (st.pattern !== "auto" && !byId(PATTERNS, st.pattern)) st.pattern = "auto";
   st.level = Math.min(5, Math.max(1, st.level | 0));
@@ -669,6 +742,8 @@ function generate(st) {
   const sp = spOf(st), C = cfgOf(sp), lv = st.level, s = sp.en;
   const cov = C.cover;
   const early = lv <= 2;
+  const hasTail = !C.noTail;
+  const assistOn = st.assist !== false && !!sp.weak && sp.g === "mammal" && lv <= 4;
   const c1 = st.colors[0] ? byId(COLORS, st.colors[0]) : null;
   const c2 = st.colors[1] ? byId(COLORS, st.colors[1]) : null;
   const pat = st.pattern === "auto" ? null : byId(PATTERNS, st.pattern);
@@ -687,6 +762,7 @@ function generate(st) {
     const shape = items.find(i => i.x === "shape"), size = items.find(i => i.x === "size");
     if (!(lv === 5 && !shape && !size)) {         // Lv.5で「おまかせ」なら animal head に任せて省略
       T.head.push([size && size.en, shape && shape.en, early && c1 ? c1.en : null, lv === 5 ? null : s, "ears"].filter(Boolean).join(" "));
+      if (assistOn) T.head.push("animal ears");
       J.parts.push((size ? size.adj : "") + (shape ? shape.ja : (size ? "耳" : `${sp.ja}の耳`)));
     }
   } else {
@@ -708,10 +784,11 @@ function generate(st) {
   const tItems = TAILS.filter(t => st.tail.includes(t.id));
   const multi = tItems.find(t => t.multi);
   const mods = tItems.filter(t => !t.multi);
-  const tailAdj = early && pat && pat.tailAdj ? pat.tailAdj : null;
+  const tailAdj = hasTail && early && pat && pat.tailAdj ? pat.tailAdj : null;
   const tailNoun = multi ? C.tailNoun.replace(/tail$/, "tails") : C.tailNoun;
-  T.tail.push([multi ? "multiple" : null, ...mods.map(m => m.en), tailAdj, early && c1 ? c1.en : null, s, tailNoun].filter(Boolean).join(" "));
-  {
+  if (hasTail) T.tail.push([multi ? "multiple" : null, ...mods.map(m => m.en), tailAdj, early && c1 ? c1.en : null, s, tailNoun].filter(Boolean).join(" "));
+  if (hasTail && assistOn) T.tail.push("animal tail");
+  if (hasTail) {
     let jt = "";
     if (mods.length) jt = mods.slice(0, -1).map(m => m.ren).join("") + mods[mods.length - 1].rt;
     if (multi) jt += "複数の";
@@ -748,7 +825,8 @@ function generate(st) {
   if (lv === 5) tr.push(C.legs, C.limbs5);
   T.traits.push(...tr.filter(Boolean));
 
-  const core = [...T.id, ...T.head, ...T.feat, ...T.tail, ...T.cover, ...T.traits];
+  const flat = arr => arr.flatMap(t => String(t).split(/,\s*/)).map(t => t.trim()).filter(Boolean);
+  const core = flat([...T.id, ...T.head, ...T.feat, ...T.tail, ...T.cover, ...T.traits]);
 
   /* 7. 体型・衣装・雰囲気・表情 */
   const rest = [];
@@ -765,7 +843,7 @@ function generate(st) {
 
   /* 重複除去 */
   const seen = new Set(), tags = [];
-  [...core, ...rest].forEach(t => { const k = t.trim().toLowerCase(); if (k && !seen.has(k)) { seen.add(k); tags.push(t.trim()); } });
+  [...core, ...flat(rest)].forEach(t => { const k = t.trim().toLowerCase(); if (k && !seen.has(k)) { seen.add(k); tags.push(t.trim()); } });
 
   /* ---------- 日本語文 ---------- */
   const L = LEVELS[lv - 1];
@@ -774,7 +852,7 @@ function generate(st) {
   let s1;
   if (lv === 1) s1 = sp.g === "mammal" ? `${colPre}${sp.ja}耳の人間（ケモミミ）` : `${colPre}${sp.ja}の要素を持つ人間`;
   else s1 = colPre + (C.jaKinFull || sp.ja + C.jaKin) + L.tagJa;
-  const lines = [s1 + "。", `${L.jaLevel}で、${joinTo(J.parts)}を持つ。`];
+  const lines = [s1 + "。", J.parts.length ? `${L.jaLevel}で、${joinTo(J.parts)}を持つ。` : `${L.jaLevel}。`];
   if (J.patternLine) lines.push(J.patternLine);
   if (bh && bb) lines.push(`${bh.ja}で${bb.jaR}体格。`); else if (bh) lines.push(`${bh.jaSolo}。`); else if (bb) lines.push(`${bb.jaR}体格。`);
   const vibeJa = vb.length ? vb.map(v => v.na).join("で") + "な雰囲気" : "";
@@ -808,7 +886,7 @@ const RANDOM = {
       st.head = chance(0.3) ? [] : [pickPref(set.items, sp.ears).id];
     }
     st.tail = [];
-    if (!chance(0.2)) {
+    if (!cfgOf(sp).noTail && !chance(0.2)) {
       const pool = tailsFor(sp.g).filter(t => !t.multi);
       const a = pickPref(pool, sp.tails);
       st.tail.push(a.id);
@@ -885,11 +963,16 @@ if (typeof document !== "undefined") (function () {
 
   /* ---------- 各セクション描画 ---------- */
   function renderSpecies() {
-    const tabs = [["all", "すべて"], ...Object.keys(GROUPS).map(k => [k, GROUPS[k].icon + " " + GROUPS[k].ja])];
-    const list = SPECIES.filter(s => tab === "all" || s.g === tab);
+    const tabs = [["all", "すべて"], ...TABS.map(t => [t.id, t.icon + " " + t.ja])];
+    const list = SPECIES.filter(s => tab === "all" || tabOf(s) === tab);
+    const cur = spOf(state);
+    const assistHtml = cur.weak && cur.g === "mammal" && state.level <= 4
+      ? `<div class="sub-label">${cur.ja}の補助設定<small>学習が少なめの種族です</small></div><div class="chips">${chip("assist", "toggle", cfgOf(cur).noTail ? "補助タグ（animal ears）を足す" : "補助タグ（animal ears / animal tail）を足す", state.assist !== false)}</div>` +
+        `<p class="mini-note">「${cur.ja}の${cfgOf(cur).noTail ? "耳" : "耳・尾"}」だけだと意図が伝わりにくいことがあるので、一般的な語も添えて安定させます。効きすぎる・不要ならオフにしてください。（Lv.5では使いません）</p>`
+      : "";
     $("body-species").innerHTML =
       `<div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" class="tab" role="tab" data-act="tab" data-v="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}</div>` +
-      `<div class="sp-grid">${list.map(s => `<button type="button" class="sp" data-act="sp" data-v="${s.id}" aria-pressed="${state.species === s.id}"><span class="em" aria-hidden="true">${s.em}</span><span class="nm">${s.ja}</span></button>`).join("")}</div>`;
+      `<div class="sp-grid">${list.map(s => `<button type="button" class="sp" data-act="sp" data-v="${s.id}" aria-pressed="${state.species === s.id}"><span class="em" aria-hidden="true">${s.em}</span><span class="nm">${s.ja}</span></button>`).join("")}</div>` + assistHtml;
   }
 
   function renderLevel() {
@@ -908,6 +991,7 @@ if (typeof document !== "undefined") (function () {
          <div class="tag-label">いまの設定で入る獣化タグ（${sp.ja}）</div>
          <div class="tagchips">${core.map(t => `<span class="tagchip">${t}</span>`).join("")}</div>
          ${L.gloss ? `<div class="gloss">${L.gloss}</div>` : ""}
+         ${sp.weak && state.level === 5 ? `<div class="gloss"><b>${sp.ja}はLv.5が不安定になりやすい種族です。</b>頭だけ動物、または人と動物が分離することがあります。うまくいかない時は Lv.4 を試してください。</div>` : ""}
        </div>`;
   }
 
@@ -920,14 +1004,17 @@ if (typeof document !== "undefined") (function () {
 
   function renderParts() {
     const sp = spOf(state), C = cfgOf(sp), set = HEAD_SETS[C.head];
-    $("parts-title").textContent = `${set.title === "耳" ? "耳" : "頭部"}・${C.tailJa}`;
+    $("parts-title").textContent = C.noTail ? (set.title === "耳" ? "耳" : "頭部") : `${set.title === "耳" ? "耳" : "頭部"}・${C.tailJa}`;
     const recH = sp.ears || [], recT = sp.tails || [];
     let h = `<div class="sub-label">${set.title}${set.multi ? "<small>形とサイズを1つずつ選べます</small>" : ""}</div><div class="chips">`;
     h += chip("head", "auto", "おまかせ", state.head.length === 0, "auto", recH.includes("auto"));
     h += set.items.map(i => chip("head", i.id, i.ja, state.head.includes(i.id), "", recH.includes(i.id))).join("") + "</div>";
-    h += `<div class="sub-label">${C.tailJa}<small>長さ・太さ・形を組み合わせOK</small></div><div class="chips">`;
-    h += chip("tail", "auto", "おまかせ", state.tail.length === 0, "auto");
-    h += tailsFor(sp.g).map(t => chip("tail", t.id, t.ja, state.tail.includes(t.id), "", recT.includes(t.id))).join("") + "</div>";
+    if (C.noTail) h += `<p class="mini-note">${sp.ja}には尾がないので、尾の指定は出力しません。</p>`;
+    else {
+      h += `<div class="sub-label">${C.tailJa}<small>長さ・太さ・形を組み合わせOK</small></div><div class="chips">`;
+      h += chip("tail", "auto", "おまかせ", state.tail.length === 0, "auto");
+      h += tailsFor(sp.g).map(t => chip("tail", t.id, t.ja, state.tail.includes(t.id), "", recT.includes(t.id))).join("") + "</div>";
+    }
     if (state.level === 5 && set.multi) h += `<p class="mini-note">Lv.5は頭が動物になるので、耳が「おまかせ」なら耳タグは省いて動物の頭に任せます。</p>`;
     if (sp.g !== "mammal") h += `<p class="mini-note">${GROUPS[sp.g].ja}用の候補を表示しています。</p>`;
     $("body-parts").innerHTML = h;
@@ -1058,6 +1145,7 @@ if (typeof document !== "undefined") (function () {
         else if (state.colors.length < 2) state.colors.push(v);
         else state.colors = [state.colors[0], v];
         break;
+      case "assist": state.assist = state.assist === false; break;
       case "pattern": state.pattern = state.pattern === v && v !== "auto" ? "auto" : v; break;
       case "outfit": state.outfit = state.outfit === v && v !== "auto" ? "auto" : v; break;
       case "vibe":
@@ -1066,7 +1154,7 @@ if (typeof document !== "undefined") (function () {
         break;
       case "expr": state.expr = state.expr === v && v !== "auto" ? "auto" : v; break;
       case "dice": {
-        if (v === "species") RANDOM.species(state, tab === "all" ? null : SPECIES.filter(s => s.g === tab));
+        if (v === "species") RANDOM.species(state, tab === "all" ? null : SPECIES.filter(s => tabOf(s) === tab));
         else RANDOM[v](state);
         if (v === "species") { normalize(state); }
         normalize(state);
